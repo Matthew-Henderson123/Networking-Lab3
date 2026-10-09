@@ -1,10 +1,14 @@
 #include "game.h"
+#include "utils.h"
 
 Game::Game()
 {
 	// Initialise the background texture and sprite.
 	// FIXME: loadFromFile returns a bool if texture was loaded successfully. We should use it to check for errors.
-	backgroundTexture.loadFromFile("Assets/tileSand1.png");
+	if (!backgroundTexture.loadFromFile("Assets/tileSand1.png"))
+	{
+		Utils::printMsg("Failed to load background image.", error);
+	}
 	backgroundTexture.setRepeated(true);
 
 	// Replace placeholder texture with a proper background texture, now that we have it.
@@ -38,6 +42,14 @@ void Game::HandleEvents(const std::optional<sf::Event> event)
 		if (keyPressed->scancode == sf::Keyboard::Scancode::D) {
 
 		}
+		if (keyPressed->scancode == sf::Keyboard::Scancode::Left) {
+			tank.isMoving.t_left = true;
+			tank.isMoving.t_right = false;
+		}
+		else if (keyPressed->scancode == sf::Keyboard::Scancode::Right) {
+			tank.isMoving.t_left = false;
+			tank.isMoving.t_right = true;
+		}
 	}
 
 	// Handle key release events passed from window.
@@ -50,6 +62,10 @@ void Game::HandleEvents(const std::optional<sf::Event> event)
 			tank.isMoving.left = false;
 		if (keyReleased->scancode == sf::Keyboard::Scancode::D)
 			tank.isMoving.right = false;
+		if (keyReleased->scancode == sf::Keyboard::Scancode::Left)
+			tank.isMoving.t_left = false;
+		if (keyReleased->scancode == sf::Keyboard::Scancode::Right)
+			tank.isMoving.t_right = false;
 	}
 }
 
@@ -61,6 +77,9 @@ void Game::Update(float dt)
 void Game::NetworkUpdate(float dt, TankMessage data) {
 	// Force position update from network data.
 	tank.position = { data.x, data.y };
+	tank.bodyRotation = sf::degrees(data.r);
+	tank.SetColourString(data.c);
+	tank.barrelRotation = sf::degrees(data.rt);
 	// Update tank with new position.
 	// NOTE: This assumets no inputs were detected and so the tank will only move according to 
 	// network updates. This is not ideal and prone to unexpected behaviour if game is extended
@@ -76,5 +95,5 @@ void Game::Render(sf::RenderWindow& window)
 
 TankMessage Game::GetNetworkUpdate()
 {
-	return { tank.position.x, tank.position.y };
+	return { tank.position.x, tank.position.y, tank.bodyRotation.asDegrees(), tank.barrelRotation.asDegrees(), tank.GetColourString()};
 }

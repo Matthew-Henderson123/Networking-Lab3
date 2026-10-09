@@ -66,6 +66,9 @@ int main() {
 	float game_speed = 1.0f;
 	float send_rate = 0.1f;
 	float send_timer = 0;
+	bool once_obs = true;
+	bool once_tank = true;
+	std::string colour;
 
 	while (window.isOpen()) {
 		// Calculate dt.
@@ -100,10 +103,28 @@ int main() {
 				Utils::printMsg("Recieved message from: " + incoming_ip.value().toString() + ":" + std::to_string(incoming_port));
 				TankMessage message;
 
+				if (once_obs)
+				{
+					TankMessage colourMessage;
+					if (packet >> colourMessage.c)
+					{
+						//ok
+					}
+					else
+						Utils::printMsg("Error sending packet", error);
+
+					once_obs = false;
+				}
 				// Read recieved data into TankMessage struct.
 				// FIXME: reading from packet can fail. Refer to documentation on how to
 				// handle errors and add error checking here.
-				packet >> message.x >> message.y;
+				if(packet >> message.x >> message.y >> message.r >> message.rt)
+				{
+					//ok
+				}
+				else
+					Utils::printMsg("Error sending packet", error);
+
 				// Use the message data to update the game.
 				game.NetworkUpdate(dt, message);
 			}
@@ -115,8 +136,26 @@ int main() {
 			game.Update(dt);
 			// Get data structure from game, containing update message.
 			TankMessage message = game.GetNetworkUpdate();
+			if(once_tank)
+			{
+				TankMessage colourMessage = game.GetNetworkUpdate();
+				if (packet << colourMessage.c)
+				{
+					//ok
+				}
+				else
+					Utils::printMsg("Error recieving packet", error);
+				colour = colourMessage.c;
+				once_tank = false;
+			}
 			// Translate our messgage struct to sf::Packet (very rudimentary conversion)
-			packet << message.x << message.y;
+			if (packet << message.x << message.y << message.r << message.rt)
+			{
+				//ok
+			}
+			else
+				Utils::printMsg("Error recieving packet", error);
+
 			sf::IpAddress observerIp(127, 0, 0, 1);
 
 			// Send messages only as often as the send rate allows.
@@ -124,6 +163,10 @@ int main() {
 				// FIXME: Send can fail, check for errors and adjust logic accordingly.
 				if (socket.send(packet, observerIp, observer_port) == sf::Socket::Status::Done) {
 					Utils::printMsg("Sent message to: " + observerIp.toString() + ":" + std::to_string(observer_port));
+					Utils::printMsg("Position: x-" + std::to_string(message.x) + " y-" + std::to_string(message.y));
+					Utils::printMsg("Body Rotation: " + std::to_string(message.r));
+					Utils::printMsg("Barrel Rotation: " + std::to_string(message.rt));
+					Utils::printMsg("Colour: " + colour);
 				}
 				else {
 					Utils::printMsg("Failed to send message to: " + observerIp.toString() + ":" + std::to_string(observer_port), error);

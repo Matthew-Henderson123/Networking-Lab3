@@ -13,7 +13,7 @@ public:
 	TankMessage GetNetworkUpdate();
 
 private:
-	Tank tank = Tank("green"); // player object
+	Tank tank = Tank("red"); // player object
 
 	// Temporary placeholder texture, make sue to replace before rendering the sprite.
 	sf::Texture placeholder = sf::Texture(sf::Vector2u(1, 1));

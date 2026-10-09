@@ -4,5 +4,6 @@
 // FIXME: Consider what else we need to send and include it here.
 struct TankMessage {
 	// The coordinates of the tank within the game world.
-	float x, y;
+	float x, y, r, rt;
+	std::string c;
 };

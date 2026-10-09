@@ -20,12 +20,20 @@ public:
 	sf::Angle barrelRotation = sf::degrees(0);
 	sf::Angle bodyRotation = sf::degrees(0);;
 
+	float min = 0;
+	float max = 360;
+
 	struct {
 		bool forward = false;
 		bool backward = false;
 		bool left = false;
 		bool right = false;
+		bool t_left = false;
+		bool t_right = false;
 	} isMoving;
+
+	void SetColourString(std::string col);
+	std::string GetColourString();
 
 private:
 	// Temporary placeholder texture, make sue to replace before rendering the sprite.
